@@ -6,6 +6,7 @@ export function Dialog({ title, onClose, children }) {
   const ref = useRef(null);
   const titleId = useId();
   const [done, setDone] = useState(false);
+  const [brief, setBrief] = useState('');
 
   useEffect(() => {
     const dialog = ref.current;
@@ -32,17 +33,23 @@ export function Dialog({ title, onClose, children }) {
       <h2 id={titleId}>{title}</h2>
       {children || (done ? (
         <div role="status">
-          <p>Your request is ready.</p>
-          <p>This is a local preview. No information was sent.</p>
-          <button type="button" className="primary" onClick={onClose}>Back to the website ↗</button>
+          <p>Your project brief is ready.</p>
+          <p>Download a copy to keep your ideas together. Your details have not been sent.</p>
+          <a className="primary" href={`data:text/plain;charset=utf-8,${encodeURIComponent(brief)}`} download="tidewell-project-brief.txt">Download your brief ↗</a>
         </div>
       ) : (
-        <form onSubmit={event => { event.preventDefault(); setDone(true); }}>
+        <form onSubmit={event => {
+          event.preventDefault();
+          const data = new FormData(event.currentTarget);
+          setBrief(`TIDEWELL HOME — PROJECT BRIEF\n\nName: ${data.get('name')}\nEmail: ${data.get('email')}\n\nYour ideas\n${data.get('message')}\n\nPrepared locally. This brief has not been sent.\n`);
+          setDone(true);
+        }}>
+          <p className="dialog-intro">Tell us what you have in mind. Start by creating a brief you can download and keep.</p>
           <label>Your name<input name="name" required autoComplete="name" /></label>
           <label>Email address<input type="email" name="email" required autoComplete="email" /></label>
-          <label>How can we help?<textarea name="message" rows="3" required /></label>
-          <button type="submit" className="primary">Prepare request ↗</button>
-          <small>Local preview. Your entries stay in this browser.</small>
+          <label>What would you love to change?<textarea name="message" rows="3" required /></label>
+          <button type="submit" className="primary">Create my project brief ↗</button>
+          <small>Your details stay in this browser until you choose to share your downloaded brief.</small>
         </form>
       ))}
     </dialog>

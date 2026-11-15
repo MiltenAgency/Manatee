@@ -2,6 +2,25 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setupDOM } from './dom.js';
 import { setupSiteControls } from '../app/site-controls.js';
+import { setupReferenceMotion } from '../app/motion.js';
+
+test('lifestyle cards select their corresponding renovation service', t => {
+  const { root, onCleanup } = setupDOM(t);
+  onCleanup(setupReferenceMotion());
+  onCleanup(setupSiteControls(root, () => assert.fail('Service links should navigate without opening a dialog')));
+  const tabs = [...root.querySelectorAll('[data-unit-tab]')];
+  const images = [...root.querySelectorAll('[data-unit-image]')];
+  const links = [...root.querySelectorAll('#about .benefit-link')];
+  assert.equal(links.length, 3);
+  links.forEach((link, index) => {
+    link.click();
+    assert.equal(link.getAttribute('href'), '#services');
+    assert.equal(tabs[index].getAttribute('aria-expanded'), 'true');
+    assert.equal(tabs.filter(tab => tab.getAttribute('aria-expanded') === 'true').length, 1);
+    assert.equal(images[index].hidden, false);
+    assert.equal(images.filter(image => !image.hidden).length, 1);
+  });
+});
 
 test('quote and newsletter handling stays scoped and never captures a dialog form', t => {
   const { window, root, onCleanup } = setupDOM(t);
@@ -9,14 +28,14 @@ test('quote and newsletter handling stays scoped and never captures a dialog for
   const cleanup = setupSiteControls(root, title => opened.push(title));
   onCleanup(cleanup);
   root.querySelector('.nav_button').click();
-  assert.deepEqual(opened, ['Get a quote']);
+  assert.deepEqual(opened, ['Plan your renovation']);
   const form = root.querySelector('.form-footer');
   form.querySelector('[type=email]').value = 'not-an-email';
   form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
   assert.equal(opened.length, 1);
   form.querySelector('[type=email]').value = 'hello@example.com';
   form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
-  assert.equal(opened.at(-1), 'Newsletter preview');
+  assert.equal(opened.at(-1), 'The Tidewell notebook');
   const dialogForm = document.createElement('form');
   document.body.append(dialogForm);
   assert.equal(dialogForm.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true })), true);
@@ -70,5 +89,6 @@ test('page has unique IDs, labeled controls, and resolved internal links', t => 
   assert.equal(new Set(ids).size, ids.length);
   for (const link of root.querySelectorAll('a[href^="#"]')) assert.ok(root.querySelector(link.getAttribute('href')));
   for (const input of root.querySelectorAll('input')) assert.ok(input.getAttribute('aria-label'));
-  for (const button of root.querySelectorAll('button')) assert.equal(button.type, 'button');
+  for (const button of root.querySelectorAll('button:not(form button)')) assert.equal(button.type, 'button');
+  assert.equal(root.querySelector('.form-footer button').type, 'submit');
 });

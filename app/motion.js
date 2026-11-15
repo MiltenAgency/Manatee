@@ -36,8 +36,8 @@ export function setupReferenceMotion() {
       tabs.forEach((tab, i) => {
         tab.setAttribute('aria-expanded', String(i === index));
         const text = tab.querySelector('span');
-        if (text) text.hidden = kind === 'process' && i !== index;
-        if (kind === 'process' && text && i === index && motion) {
+        if (text) text.hidden = i !== index;
+        if (text && i === index && motion) {
           animate(text, [{opacity: 0, transform:'translateY(8px)'}, {opacity:1, transform:'translateY(0)'}], {duration:500, easing:curve});
         }
       });
@@ -150,7 +150,7 @@ export function setupReferenceMotion() {
   }
 
   // Sticky positioning supplies the overlap; only the hero artwork/content
-  // transforms while the white benefits panel moves over it in normal flow.
+  // transforms while the lifestyle panel moves over it in normal flow.
   const hero = document.querySelector('.pin-hero-stack .section_home-header');
   const benefits = document.querySelector('.section_home-benefits');
   if (hero && benefits) {
@@ -204,7 +204,8 @@ export function setupReferenceMotion() {
       buttons[1].disabled = track.scrollLeft >= track.scrollWidth - track.clientWidth - 4;
     };
     buttons.forEach(button => listen(button, 'click', () => {
-      const step = track.children[0].getBoundingClientRect().width + 12;
+      const gap = Number.parseFloat(window.getComputedStyle(track).columnGap) || 0;
+      const step = track.children[0].getBoundingClientRect().width + gap;
       track.scrollBy({left:Number(button.dataset.storyDirection) * step, behavior:reduced.matches ? 'instant' : 'smooth'});
     }));
     listen(track, 'scroll', update);
@@ -231,7 +232,17 @@ export function setupReferenceMotion() {
   const heading = document.querySelector('.pin-word-reveal');
   if (heading) {
     const original = heading.innerHTML;
-    heading.innerHTML = 'More<br>than money'.split(/(<br>| )/).map(word => word === '<br>' || word === ' ' ? word : `<span>${word}</span>`).join('');
+    const fragment = document.createDocumentFragment();
+    [...heading.childNodes].forEach(node => {
+      if (node.nodeType !== 3) { fragment.append(node.cloneNode(true)); return; }
+      node.textContent.split(/(\s+)/).filter(Boolean).forEach(word => {
+        if (/^\s+$/.test(word)) { fragment.append(document.createTextNode(word)); return; }
+        const span = document.createElement('span');
+        span.textContent = word;
+        fragment.append(span);
+      });
+    });
+    heading.replaceChildren(fragment);
     const words = [...heading.querySelectorAll('span')];
     let frame = 0;
     const paint = () => {

@@ -1,7 +1,36 @@
+# Dependencies and generated build output
 node_modules/
 .next/
+out/
+dist/
+build/
 *.tsbuildinfo
+next-env.d.ts
+
+# Tests, caches, and local logs
+coverage/
+playwright-report/
+test-results/
+.cache/
+.turbo/
+.eslintcache
+*.log
+
+# Environment files and private credentials
 .env*
 !.env.example
+*.pem
+*.key
 .aws/
+
+# Local agent and hosting state (keep AGENTS.md tracked)
+.agents/
 .codex/
+.vercel/
+
+# Operating system and editor temporary files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

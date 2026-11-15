@@ -64,20 +64,26 @@ export function setupSiteControls(root, openDialog) {
       faqs.forEach(button => setQuestion(button, button === question && expand));
       return;
     }
+    const dialogTrigger = event.target.closest('[data-open-dialog]');
+    if (dialogTrigger) {
+      event.preventDefault();
+      if (menuOpen) setMenu(false, true);
+      openDialog(dialogTrigger.dataset.openDialog);
+      return;
+    }
     const anchor = event.target.closest('a[href]');
     if (!anchor) return;
     if (menuOpen) setMenu(false, true);
-    const url = new URL(anchor.href, window.location.href);
-    if (url.hostname === 'app.manatee.energy') {
-      event.preventDefault();
-      openDialog(url.pathname.includes('sign-in') ? 'Manatee account preview' : 'Get a quote');
+    if (anchor.hasAttribute('data-service-index')) {
+      const index = Number(anchor.dataset.serviceIndex);
+      root.querySelectorAll('[data-unit-tab]')[index]?.click();
     }
   });
   listen(root, 'submit', event => {
     const form = event.target;
     if (!(form instanceof HTMLFormElement) || !form.matches('.form-footer')) return;
     event.preventDefault();
-    if (form.reportValidity()) openDialog('Newsletter preview');
+    if (form.reportValidity()) openDialog('The Tidewell notebook');
   });
   return () => cleanups.reverse().forEach(cleanup => cleanup());
 }
